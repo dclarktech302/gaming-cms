@@ -633,23 +633,13 @@
                 const ext = video.filename.toLowerCase().split('.').pop();
                 const typeMap = {
                     'mp4': 'video/mp4',
-                    'mov': 'video/mp4', // Most browsers support MP4 codec in MOV
+                    'mov': 'video/mp4',
                     'avi': 'video/x-msvideo',
                     'webm': 'video/webm',
                     'mkv': 'video/x-matroska',
                     'm4v': 'video/mp4'
                 };
                 const mimeType = typeMap[ext] || 'video/mp4';
-
-                // Clear previous source
-                videoPlayer.innerHTML = '';
-                videoPlayer.removeAttribute('src');
-
-                // Create source element
-                const source = document.createElement('source');
-                source.src = data.url;
-                source.type = mimeType;
-                videoPlayer.appendChild(source);
 
                 console.log('Loading video:', {
                     filename: video.filename,
@@ -658,7 +648,12 @@
                     url: data.url.substring(0, 100) + '...'
                 });
 
-                // Add error handler for video loading
+                // Stop and clear any existing video
+                videoPlayer.pause();
+                videoPlayer.removeAttribute('src');
+                videoPlayer.load();
+
+                // Set up error handler BEFORE setting source
                 videoPlayer.onerror = (e) => {
                     console.error('Video load error:', e);
                     console.error('Video error code:', videoPlayer.error?.code);
@@ -677,22 +672,28 @@
                     showMessage(errorMsg + ` (Format: ${ext.toUpperCase()})`, 'error');
                 };
 
-                videoPlayer.load();
-                modal.classList.add('active');
+                // Set video source directly (not using source element)
+                videoPlayer.src = data.url;
+                videoPlayer.type = mimeType;
 
-                // Try to autoplay
-                videoPlayer.play().catch(err => {
-                    console.log('Autoplay prevented:', err);
-                    // Show a message to user to click play
-                    if (err.name === 'NotSupportedError') {
-                        showMessage(`Video format (${ext.toUpperCase()}) may not be supported by your browser. Try converting to MP4.`, 'error');
-                    }
-                });
+                // Show modal
+                modal.classList.add('active');
 
                 // Mark card as active
                 document.querySelectorAll('.video-card').forEach((card, i) => {
                     card.classList.toggle('active', i === index);
                 });
+
+                // Load and play
+                videoPlayer.load();
+
+                // Wait a moment before trying to play
+                setTimeout(() => {
+                    videoPlayer.play().catch(err => {
+                        console.log('Autoplay failed (this is normal):', err.message);
+                        // Don't show error - autoplay failure is expected
+                    });
+                }, 100);
 
             } catch (error) {
                 console.error('Error playing video:', error);
