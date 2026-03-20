@@ -629,52 +629,21 @@
                 document.getElementById('modalDate').textContent = formatDate(video.last_modified);
                 document.getElementById('modalSize').textContent = formatSize(video.size_bytes);
 
-                // Determine video type from filename
-                const ext = video.filename.toLowerCase().split('.').pop();
-                const typeMap = {
-                    'mp4': 'video/mp4',
-                    'mov': 'video/mp4',
-                    'avi': 'video/x-msvideo',
-                    'webm': 'video/webm',
-                    'mkv': 'video/x-matroska',
-                    'm4v': 'video/mp4'
-                };
-                const mimeType = typeMap[ext] || 'video/mp4';
-
-                console.log('Loading video:', {
-                    filename: video.filename,
-                    ext: ext,
-                    mimeType: mimeType,
-                    url: data.url.substring(0, 100) + '...'
-                });
-
-                // Stop and clear any existing video
+                // Clear previous video (MDN best practice)
                 videoPlayer.pause();
-                videoPlayer.removeAttribute('src');
+                videoPlayer.innerHTML = '';
+
+                // Create source element (MDN recommended approach)
+                const source = document.createElement('source');
+                source.src = data.url;
+                source.type = 'video/mp4';
+                videoPlayer.appendChild(source);
+
+                // Add fallback text
+                videoPlayer.appendChild(document.createTextNode('Your browser does not support the video tag.'));
+
+                // Load the video
                 videoPlayer.load();
-
-                // Set up error handler BEFORE setting source
-                videoPlayer.onerror = (e) => {
-                    console.error('Video load error:', e);
-                    console.error('Video error code:', videoPlayer.error?.code);
-                    console.error('Video error message:', videoPlayer.error?.message);
-
-                    let errorMsg = 'Failed to load video. ';
-                    if (videoPlayer.error) {
-                        switch(videoPlayer.error.code) {
-                            case 1: errorMsg += 'Loading aborted.'; break;
-                            case 2: errorMsg += 'Network error.'; break;
-                            case 3: errorMsg += 'Decode error - unsupported format.'; break;
-                            case 4: errorMsg += 'Video file not found or format not supported.'; break;
-                            default: errorMsg += 'Unknown error.';
-                        }
-                    }
-                    showMessage(errorMsg + ` (Format: ${ext.toUpperCase()})`, 'error');
-                };
-
-                // Set video source directly (not using source element)
-                videoPlayer.src = data.url;
-                videoPlayer.type = mimeType;
 
                 // Show modal
                 modal.classList.add('active');
@@ -683,17 +652,6 @@
                 document.querySelectorAll('.video-card').forEach((card, i) => {
                     card.classList.toggle('active', i === index);
                 });
-
-                // Load and play
-                videoPlayer.load();
-
-                // Wait a moment before trying to play
-                setTimeout(() => {
-                    videoPlayer.play().catch(err => {
-                        console.log('Autoplay failed (this is normal):', err.message);
-                        // Don't show error - autoplay failure is expected
-                    });
-                }, 100);
 
             } catch (error) {
                 console.error('Error playing video:', error);
