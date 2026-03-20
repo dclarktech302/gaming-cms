@@ -80,9 +80,21 @@ app.get('/api/video-url', async (req, res) => {
       return res.status(403).json({ error: 'Access denied to this file' });
     }
 
+    // Determine content type based on file extension
+    const ext = key.toLowerCase().split('.').pop();
+    const contentTypeMap = {
+      'mp4': 'video/mp4',
+      'mov': 'video/quicktime',
+      'avi': 'video/x-msvideo',
+      'webm': 'video/webm',
+      'mkv': 'video/x-matroska'
+    };
+    const contentType = contentTypeMap[ext] || 'video/mp4';
+
     const command = new GetObjectCommand({
       Bucket: S3_BUCKET,
-      Key: key
+      Key: key,
+      ResponseContentType: contentType
     });
 
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
@@ -91,9 +103,9 @@ app.get('/api/video-url', async (req, res) => {
 
   } catch (error) {
     console.error('Error generating presigned URL:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to generate video URL',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -119,11 +131,24 @@ app.get('/api/videos/:filename', async (req, res) => {
     }
 
     const item = response.Contents[0];
+
+    // Determine content type based on file extension
+    const ext = item.Key.toLowerCase().split('.').pop();
+    const contentTypeMap = {
+      'mp4': 'video/mp4',
+      'mov': 'video/quicktime',
+      'avi': 'video/x-msvideo',
+      'webm': 'video/webm',
+      'mkv': 'video/x-matroska'
+    };
+    const contentType = contentTypeMap[ext] || 'video/mp4';
+
     const videoUrl = await getSignedUrl(
       s3Client,
       new GetObjectCommand({
         Bucket: S3_BUCKET,
-        Key: item.Key
+        Key: item.Key,
+        ResponseContentType: contentType
       }),
       { expiresIn: 3600 }
     );

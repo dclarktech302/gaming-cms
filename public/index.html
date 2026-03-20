@@ -512,7 +512,7 @@
         <button class="close-button" onclick="closeModal()">&times;</button>
         <div class="modal-content">
             <div class="modal-video">
-                <video id="videoPlayer" controls></video>
+                <video id="videoPlayer" controls preload="metadata" playsinline crossorigin="anonymous"></video>
             </div>
             <div class="modal-info">
                 <div class="modal-title" id="modalTitle"></div>
@@ -617,7 +617,7 @@
             try {
                 // Get presigned URL from backend
                 const response = await fetch(`${API_BASE}/api/video-url?key=${encodeURIComponent(video.key)}`);
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to get video URL');
                 }
@@ -631,7 +631,19 @@
 
                 // Play video
                 videoPlayer.src = data.url;
+                videoPlayer.load();
                 modal.classList.add('active');
+
+                // Try to autoplay
+                videoPlayer.play().catch(err => {
+                    console.log('Autoplay prevented:', err);
+                });
+
+                // Add error handler for video loading
+                videoPlayer.onerror = (e) => {
+                    console.error('Video load error:', e);
+                    showMessage('Failed to load video. The file may be corrupted or in an unsupported format.', 'error');
+                };
 
                 // Mark card as active
                 document.querySelectorAll('.video-card').forEach((card, i) => {
