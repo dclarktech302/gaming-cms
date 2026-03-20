@@ -512,7 +512,7 @@
         <button class="close-button" onclick="closeModal()">&times;</button>
         <div class="modal-content">
             <div class="modal-video">
-                <video id="videoPlayer" controls preload="metadata" playsinline crossorigin="anonymous"></video>
+                <video id="videoPlayer" controls preload="metadata" playsinline></video>
             </div>
             <div class="modal-info">
                 <div class="modal-title" id="modalTitle"></div>
@@ -629,21 +629,65 @@
                 document.getElementById('modalDate').textContent = formatDate(video.last_modified);
                 document.getElementById('modalSize').textContent = formatSize(video.size_bytes);
 
-                // Play video
-                videoPlayer.src = data.url;
+                // Determine video type from filename
+                const ext = video.filename.toLowerCase().split('.').pop();
+                const typeMap = {
+                    'mp4': 'video/mp4',
+                    'mov': 'video/mp4', // Most browsers support MP4 codec in MOV
+                    'avi': 'video/x-msvideo',
+                    'webm': 'video/webm',
+                    'mkv': 'video/x-matroska',
+                    'm4v': 'video/mp4'
+                };
+                const mimeType = typeMap[ext] || 'video/mp4';
+
+                // Clear previous source
+                videoPlayer.innerHTML = '';
+                videoPlayer.removeAttribute('src');
+
+                // Create source element
+                const source = document.createElement('source');
+                source.src = data.url;
+                source.type = mimeType;
+                videoPlayer.appendChild(source);
+
+                console.log('Loading video:', {
+                    filename: video.filename,
+                    ext: ext,
+                    mimeType: mimeType,
+                    url: data.url.substring(0, 100) + '...'
+                });
+
+                // Add error handler for video loading
+                videoPlayer.onerror = (e) => {
+                    console.error('Video load error:', e);
+                    console.error('Video error code:', videoPlayer.error?.code);
+                    console.error('Video error message:', videoPlayer.error?.message);
+
+                    let errorMsg = 'Failed to load video. ';
+                    if (videoPlayer.error) {
+                        switch(videoPlayer.error.code) {
+                            case 1: errorMsg += 'Loading aborted.'; break;
+                            case 2: errorMsg += 'Network error.'; break;
+                            case 3: errorMsg += 'Decode error - unsupported format.'; break;
+                            case 4: errorMsg += 'Video file not found or format not supported.'; break;
+                            default: errorMsg += 'Unknown error.';
+                        }
+                    }
+                    showMessage(errorMsg + ` (Format: ${ext.toUpperCase()})`, 'error');
+                };
+
                 videoPlayer.load();
                 modal.classList.add('active');
 
                 // Try to autoplay
                 videoPlayer.play().catch(err => {
                     console.log('Autoplay prevented:', err);
+                    // Show a message to user to click play
+                    if (err.name === 'NotSupportedError') {
+                        showMessage(`Video format (${ext.toUpperCase()}) may not be supported by your browser. Try converting to MP4.`, 'error');
+                    }
                 });
-
-                // Add error handler for video loading
-                videoPlayer.onerror = (e) => {
-                    console.error('Video load error:', e);
-                    showMessage('Failed to load video. The file may be corrupted or in an unsupported format.', 'error');
-                };
 
                 // Mark card as active
                 document.querySelectorAll('.video-card').forEach((card, i) => {

@@ -25,6 +25,31 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.get('/api/test-video/:key', async (req, res) => {
+  try {
+    const { key } = req.params;
+    const fullKey = S3_FOLDER ? `${S3_FOLDER}/${key}` : key;
+
+    const command = new GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: fullKey
+    });
+
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+    res.json({
+      message: 'Test URL generated',
+      key: fullKey,
+      url: url,
+      instructions: 'Copy this URL and paste it directly in your browser to test if it works'
+    });
+
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/videos', async (req, res) => {
   try {
     if (!S3_BUCKET) {
