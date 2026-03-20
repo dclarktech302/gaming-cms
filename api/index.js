@@ -30,6 +30,16 @@ app.get('/api/test-video/:key', async (req, res) => {
     const { key } = req.params;
     const fullKey = S3_FOLDER ? `${S3_FOLDER}/${key}` : key;
 
+    // First, get object metadata using HeadObject
+    const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
+    const headCommand = new HeadObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: fullKey
+    });
+
+    const metadata = await s3Client.send(headCommand);
+
+    // Generate presigned URL
     const command = new GetObjectCommand({
       Bucket: S3_BUCKET,
       Key: fullKey
@@ -41,6 +51,12 @@ app.get('/api/test-video/:key', async (req, res) => {
       message: 'Test URL generated',
       key: fullKey,
       url: url,
+      metadata: {
+        contentType: metadata.ContentType,
+        contentLength: metadata.ContentLength,
+        acceptRanges: metadata.AcceptRanges,
+        lastModified: metadata.LastModified
+      },
       instructions: 'Copy this URL and paste it directly in your browser to test if it works'
     });
 
@@ -105,21 +121,11 @@ app.get('/api/video-url', async (req, res) => {
       return res.status(403).json({ error: 'Access denied to this file' });
     }
 
-    // Determine content type based on file extension
-    const ext = key.toLowerCase().split('.').pop();
-    const contentTypeMap = {
-      'mp4': 'video/mp4',
-      'mov': 'video/quicktime',
-      'avi': 'video/x-msvideo',
-      'webm': 'video/webm',
-      'mkv': 'video/x-matroska'
-    };
-    const contentType = contentTypeMap[ext] || 'video/mp4';
-
+    // Generate presigned URL without ResponseContentType
+    // This allows the browser to make range requests
     const command = new GetObjectCommand({
       Bucket: S3_BUCKET,
-      Key: key,
-      ResponseContentType: contentType
+      Key: key
     });
 
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
@@ -157,23 +163,11 @@ app.get('/api/videos/:filename', async (req, res) => {
 
     const item = response.Contents[0];
 
-    // Determine content type based on file extension
-    const ext = item.Key.toLowerCase().split('.').pop();
-    const contentTypeMap = {
-      'mp4': 'video/mp4',
-      'mov': 'video/quicktime',
-      'avi': 'video/x-msvideo',
-      'webm': 'video/webm',
-      'mkv': 'video/x-matroska'
-    };
-    const contentType = contentTypeMap[ext] || 'video/mp4';
-
     const videoUrl = await getSignedUrl(
       s3Client,
       new GetObjectCommand({
         Bucket: S3_BUCKET,
-        Key: item.Key,
-        ResponseContentType: contentType
+        Key: item.Key
       }),
       { expiresIn: 3600 }
     );

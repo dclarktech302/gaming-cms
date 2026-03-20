@@ -29,12 +29,16 @@ Your videos are showing but not playing because your S3 bucket needs CORS (Cross
         "ExposeHeaders": [
             "ETag",
             "Content-Length",
-            "Content-Type"
+            "Content-Type",
+            "Content-Range",
+            "Accept-Ranges"
         ],
         "MaxAgeSeconds": 3000
     }
 ]
 ```
+
+**IMPORTANT**: The `Content-Range` and `Accept-Ranges` headers are **required** for video playback to support seeking and range requests. Without these, you'll get 416 errors.
 
 7. Click **Save changes**
 
@@ -67,7 +71,9 @@ If you want to allow only your domain:
         "ExposeHeaders": [
             "ETag",
             "Content-Length",
-            "Content-Type"
+            "Content-Type",
+            "Content-Range",
+            "Accept-Ranges"
         ],
         "MaxAgeSeconds": 3000
     }
