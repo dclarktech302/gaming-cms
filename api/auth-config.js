@@ -1,5 +1,5 @@
 // MSAL Configuration for Microsoft Authentication
-import { ConfidentialClientApplication } from '@azure/msal-node';
+const { ConfidentialClientApplication } = require('@azure/msal-node');
 
 // MSAL configuration
 const msalConfig = {
@@ -22,20 +22,20 @@ const msalConfig = {
 };
 
 // Create MSAL client instance
-export const msalClient = new ConfidentialClientApplication(msalConfig);
+module.exports.msalClient = msalClient;
 
 // OAuth scopes required
-export const scopes = ['Files.ReadWrite.All', 'offline_access'];
+module.exports.scopes = ['Files.ReadWrite.All', 'offline_access'];
 
 // Token cache (in-memory for now, should be database in production)
-export const tokenCache = {
+module.exports.tokenCache = {
   accessToken: process.env.ONEDRIVE_ACCESS_TOKEN || null,
   refreshToken: process.env.ONEDRIVE_REFRESH_TOKEN || null,
   expiresOn: null,
 };
 
 // Get cached access token or refresh if expired
-export async function getAccessToken() {
+module.exports.getAccessToken = async function () {
   // If we have a valid cached token, return it
   if (tokenCache.accessToken && tokenCache.expiresOn && new Date() < tokenCache.expiresOn) {
     return tokenCache.accessToken;
@@ -68,7 +68,7 @@ export async function getAccessToken() {
 }
 
 // Exchange authorization code for tokens
-export async function exchangeCodeForTokens(code, redirectUri) {
+module.exports.exchangeCodeForTokens = async function (code, redirectUri) {
   const tokenRequest = {
     code: code,
     scopes: scopes,
@@ -95,7 +95,7 @@ export async function exchangeCodeForTokens(code, redirectUri) {
 }
 
 // Get authorization URL with PKCE
-export function getAuthCodeUrl(redirectUri) {
+module.exports.getAuthCodeUrl = function (redirectUri) {
   const authCodeUrlParameters = {
     scopes: scopes,
     redirectUri: redirectUri,
