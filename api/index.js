@@ -1,10 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { Client } = require('@microsoft/microsoft-graph-client');
-const axios = require('axios');
-const { getAccessToken, exchangeCodeForTokens, getAuthCodeUrl } = require('./auth-config.js');
+import express from 'express';
+import cors from 'cors';
+import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Client } from '@microsoft/microsoft-graph-client';
+import axios from 'axios';
+import 'isomorphic-fetch';
+import { getAccessToken, exchangeCodeForTokens, getAuthCodeUrl } from './auth-config.js';
 
 const app = express();
 
@@ -496,7 +497,4 @@ app.get('/api/videos/:filename', async (req, res) => {
   }
 });
 
-// Vercel serverless function handler
-module.exports = (req, res) => {
-  app(req, res);
-};
+export default app;
