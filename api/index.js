@@ -5,7 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Client } from '@microsoft/microsoft-graph-client';
 import axios from 'axios';
 import 'isomorphic-fetch';
-// import { getAccessToken, exchangeCodeForTokens, getAuthCodeUrl } from './auth-config.js';
+import { getAccessToken, exchangeCodeForTokens, getAuthCodeUrl } from './auth-config.js';
 
 const app = express();
 

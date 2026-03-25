@@ -107,7 +107,7 @@ function getAuthCodeUrl(redirectUri) {
 }
 
 // Export all functions and constants
-module.exports = {
+export {
   msalClient,
   scopes,
   tokenCache,
