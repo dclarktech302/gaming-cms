@@ -22,20 +22,20 @@ const msalConfig = {
 };
 
 // Create MSAL client instance
-export const msalClient = msalClient;
+const msalClient = new ConfidentialClientApplication(msalConfig);
 
 // OAuth scopes required
-export const scopes = ['Files.ReadWrite.All', 'offline_access'];
+const scopes = ['Files.ReadWrite.All', 'offline_access'];
 
 // Token cache (in-memory for now, should be database in production)
-export const tokenCache = {
+const tokenCache = {
   accessToken: process.env.ONEDRIVE_ACCESS_TOKEN || null,
   refreshToken: process.env.ONEDRIVE_REFRESH_TOKEN || null,
   expiresOn: null,
 };
 
 // Get cached access token or refresh if expired
-export async function getAccessToken() {
+async function getAccessToken() {
   // If we have a valid cached token, return it
   if (tokenCache.accessToken && tokenCache.expiresOn && new Date() < tokenCache.expiresOn) {
     return tokenCache.accessToken;
@@ -68,7 +68,7 @@ export async function getAccessToken() {
 }
 
 // Exchange authorization code for tokens
-export async function exchangeCodeForTokens(code, redirectUri) {
+async function exchangeCodeForTokens(code, redirectUri) {
   const tokenRequest = {
     code: code,
     scopes: scopes,
@@ -95,7 +95,7 @@ export async function exchangeCodeForTokens(code, redirectUri) {
 }
 
 // Get authorization URL with PKCE
-export function getAuthCodeUrl(redirectUri) {
+function getAuthCodeUrl(redirectUri) {
   const authCodeUrlParameters = {
     scopes: scopes,
     redirectUri: redirectUri,
@@ -105,3 +105,13 @@ export function getAuthCodeUrl(redirectUri) {
 
   return msalClient.getAuthCodeUrl(authCodeUrlParameters);
 }
+
+// Export all functions and constants
+module.exports = {
+  msalClient,
+  scopes,
+  tokenCache,
+  getAccessToken,
+  exchangeCodeForTokens,
+  getAuthCodeUrl
+};
