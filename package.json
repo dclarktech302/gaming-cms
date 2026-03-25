@@ -1,6 +1,7 @@
 {
   "name": "ufc5-cms-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "UFC5 CMS Backend - AWS S3 Video Management",
   "main": "api/index.js",
   "scripts": {

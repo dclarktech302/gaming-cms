@@ -1,17 +1,23 @@
-const express = require('express');
-const cors = require('cors');
-const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { Client } = require('@microsoft/microsoft-graph-client');
-const axios = require('axios');
-const { getAccessToken, exchangeCodeForTokens, getAuthCodeUrl } = require('./auth-config.js');
+import express from 'express';
+import cors from 'cors';
+import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Client } from '@microsoft/microsoft-graph-client';
+import axios from 'axios';
+import 'isomorphic-fetch';
+import { getAccessToken, exchangeCodeForTokens, getAuthCodeUrl } from './auth-config.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static('public'));
+app.use(express.static(join(__dirname, '../public')));
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
@@ -496,4 +502,13 @@ app.get('/api/videos/:filename', async (req, res) => {
   }
 });
 
-module.exports = app;
+// app.get('*', (req, res) => {
+//   res.sendFile(join(__dirname, '../public/index.html'));
+// });
+
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
+
+export default app;

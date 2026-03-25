@@ -1,5 +1,5 @@
 // MSAL Configuration for Microsoft Authentication
-const { ConfidentialClientApplication } = require('@azure/msal-node');
+import { ConfidentialClientApplication } from '@azure/msal-node';
 
 // MSAL configuration
 const msalConfig = {
@@ -22,20 +22,20 @@ const msalConfig = {
 };
 
 // Create MSAL client instance
-module.exports.msalClient = msalClient;
+const msalClient = new ConfidentialClientApplication(msalConfig);
 
 // OAuth scopes required
-module.exports.scopes = ['Files.ReadWrite.All', 'offline_access'];
+const scopes = ['Files.ReadWrite.All', 'offline_access'];
 
 // Token cache (in-memory for now, should be database in production)
-module.exports.tokenCache = {
+const tokenCache = {
   accessToken: process.env.ONEDRIVE_ACCESS_TOKEN || null,
   refreshToken: process.env.ONEDRIVE_REFRESH_TOKEN || null,
   expiresOn: null,
 };
 
 // Get cached access token or refresh if expired
-module.exports.getAccessToken = async function () {
+async function getAccessToken() {
   // If we have a valid cached token, return it
   if (tokenCache.accessToken && tokenCache.expiresOn && new Date() < tokenCache.expiresOn) {
     return tokenCache.accessToken;
@@ -68,7 +68,7 @@ module.exports.getAccessToken = async function () {
 }
 
 // Exchange authorization code for tokens
-module.exports.exchangeCodeForTokens = async function (code, redirectUri) {
+async function exchangeCodeForTokens(code, redirectUri) {
   const tokenRequest = {
     code: code,
     scopes: scopes,
@@ -95,7 +95,7 @@ module.exports.exchangeCodeForTokens = async function (code, redirectUri) {
 }
 
 // Get authorization URL with PKCE
-module.exports.getAuthCodeUrl = function (redirectUri) {
+function getAuthCodeUrl(redirectUri) {
   const authCodeUrlParameters = {
     scopes: scopes,
     redirectUri: redirectUri,
@@ -105,3 +105,13 @@ module.exports.getAuthCodeUrl = function (redirectUri) {
 
   return msalClient.getAuthCodeUrl(authCodeUrlParameters);
 }
+
+// Export all functions and constants
+export {
+  msalClient,
+  scopes,
+  tokenCache,
+  getAccessToken,
+  exchangeCodeForTokens,
+  getAuthCodeUrl
+};
