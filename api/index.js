@@ -496,4 +496,7 @@ app.get('/api/videos/:filename', async (req, res) => {
   }
 });
 
-module.exports = app;
+// Vercel serverless function handler
+module.exports = (req, res) => {
+  app(req, res);
+};
