@@ -6,13 +6,18 @@ import { Client } from '@microsoft/microsoft-graph-client';
 import axios from 'axios';
 import 'isomorphic-fetch';
 import { getAccessToken, exchangeCodeForTokens, getAuthCodeUrl } from './auth-config.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static('public'));
+app.use(express.static(join(__dirname, '../public')));
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
@@ -497,4 +502,11 @@ app.get('/api/videos/:filename', async (req, res) => {
   }
 });
 
-export default app;
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, '../public/index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
